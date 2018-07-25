@@ -29,10 +29,11 @@ BYTES_PER_TB=$(bc <<< 1024^4)	#1099511627776
 for DISK in /sys/block/* ; do
 	if [[ $(cat $DISK/queue/rotational) -eq 0 ]] ; then	# SSD=0 HD=1
 		DEV=${DISK##*/}
+        DEV=${DEV//nvme0n1/nvme0}   #Fix for MyDigitalSSD SBX
 		# Get SMART attributes
-		SMART_INFO="$(sudo smartctl -a /dev/${DISK##*/})"
+		SMART_INFO="$(sudo smartctl -a /dev/$DEV)"
 		# Device column #1
-		LIST_ITEMS+=("/dev/${DISK##*/}")
+		LIST_ITEMS+=("/dev/$DEV")
 		# Get model name, trim leading whitespace
 		if [ "${DEV:0:4}" = "nvme" ]; then	# Non-Volatile Memory express (NVMe)
 			DEVICE_MODEL="$(grep "Model Number:" <<< "$SMART_INFO" | cut -d ":" -f 2 | sed -e 's/^[ \t]*//')"
@@ -76,6 +77,13 @@ for DISK in /sys/block/* ; do
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="173 Unknown_Attribute"
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+			;;
+
+			"SBX")	# MyDigitalSSD SBX, NVMe
+				# Get attributes ___, ___, ___
+				ATTR_POHR="Power On Hours:"
+				ATTR_LBAW="Data Units Written:"
+				ATTR_WEAR="Percentage Used:"
 			;;
 
 			############ Add other SSD models here. ############
