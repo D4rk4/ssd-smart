@@ -29,7 +29,7 @@ BYTES_PER_TB=$(bc <<< 1024^4)	#1099511627776
 for DISK in /sys/block/* ; do
 	if [[ $(cat $DISK/queue/rotational) -eq 0 ]] ; then	# SSD=0 HD=1
 		DEV=${DISK##*/}
-        DEV=${DEV//nvme0n1/nvme0}   #Fix for MyDigitalSSD SBX
+		DEV=${DEV//nvme0n1/nvme0}   #Fix for MyDigitalSSD SBX
 		# Get SMART attributes
 		SMART_INFO="$(sudo smartctl -a /dev/$DEV)"
 		# Device column #1
