@@ -19,19 +19,20 @@ function HoursToYDH {
   (( $H > 0 )) && printf '%d hours ' $H
 }
 
-
+LANG=C
 LBA_SIZE=512	# Always?
-#BYTES_PER_MB=1048576
-BYTES_PER_GB=$(bc <<< 1024^3)	#1073741824
-BYTES_PER_TB=$(bc <<< 1024^4)	#1099511627776
+BYTES_PER_MB=1048576
+BYTES_PER_GB=1073741824
+BYTES_PER_TB=1099511627776
 
 # Get SSD Smart Data and pack into array.
 for DISK in /sys/block/* ; do
+	if [[ ${DISK} != *"zd"* ]]; then	# excluding ZFS volumes
 	if [[ $(cat $DISK/queue/rotational) -eq 0 ]] ; then	# SSD=0 HD=1
 		DEV=${DISK##*/}
 		DEV=${DEV//nvme0n1/nvme0}   #Fix for MyDigitalSSD SBX
 		# Get SMART attributes
-		SMART_INFO="$(sudo smartctl -a /dev/$DEV)"
+		SMART_INFO="$(smartctl -a /dev/$DEV)"
 		# Device column #1
 		LIST_ITEMS+=("/dev/$DEV")
 		# Get model name, trim leading whitespace
@@ -79,12 +80,22 @@ for DISK in /sys/block/* ; do
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
 			;;
 
-			"SBX")	# MyDigitalSSD SBX, NVMe
-				# Get attributes ___, ___, ___
-				ATTR_POHR="Power On Hours:"
-				ATTR_LBAW="Data Units Written:"
-				ATTR_WEAR="Percentage Used:"
+			"MT-64") # KingSpec M2 SSD 64Gb
+				ATTR_POHR="Power_On_Hours"
+				ATTR_LBAW="Total_LBAs_Written"
+				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
 			;;
+			"P3-512") # KingSpec SATA SSD 512Gb
+				ATTR_POHR="Power_On_Hours"
+				ATTR_LBAW="Total_LBAs_Written"
+				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+			;;
+			TS*GSSD360S) # Transcend 360S SSDs
+				ATTR_POHR="Power_On_Hours"
+				ATTR_LBAW="Total_LBAs_Written"
+				ATTR_WEAR="Wear_Leveling_Count"
+			;;
+
 
 			############ Add other SSD models here. ############
 
@@ -98,18 +109,25 @@ for DISK in /sys/block/* ; do
 
 			*)
 				# Other unsupported device models
-				for (( i=1; i<=5; i++)); do LIST_ITEMS+=("n/a"); done
-				continue
+                                if [ "${DEV:0:4}" = "nvme" ]; then      # Non-Volatile Memory express (NVMe)
+                                        ATTR_POHR="Power On Hours:"
+                                        ATTR_LBAW="Data Units Written:"
+                                        ATTR_WEAR="Percentage Used:"
+				else
+					for (( i=1; i<=5; i++)); do LIST_ITEMS+=("n/a"); done
+					continue
+                                fi
+
 			;;
 		esac
 
 
 			if [ "${DEV:0:4}" = "nvme" ]; then	# Non-Volatile Memory express (NVMe)
-					 ON_TIME=$(grep "$ATTR_POHR" <<< "$SMART_INFO" | awk '{print $4}')
-				LBAS_WRITTEN=$(grep "$ATTR_LBAW" <<< "$SMART_INFO" | awk '{print $4}')
-				LBAS_WRITTEN=$(( ${LBAS_WRITTEN//,/} * 1000 ))	# Remove any thousands separator (,) or (.) for EU
+				ON_TIME=$(grep "$ATTR_POHR" <<< "$SMART_INFO" | awk '{print $4}'|sed 's/[^0-9]*//g')
+				LBAS_WRITTEN=$(grep "$ATTR_LBAW" <<< "$SMART_INFO" | awk '{print $4}'| sed 's/[^0-9]*//g')
+				LBAS_WRITTEN=$(( $LBAS_WRITTEN * 1100 ))
 			else
-					 ON_TIME=$(grep "$ATTR_POHR" <<< "$SMART_INFO" | awk '{print $10}')
+				ON_TIME=$(grep "$ATTR_POHR" <<< "$SMART_INFO" | awk '{print $10}')
 				LBAS_WRITTEN=$(grep "$ATTR_LBAW" <<< "$SMART_INFO" | awk '{print $10}')
 			fi
 
@@ -136,7 +154,7 @@ for DISK in /sys/block/* ; do
 
 			# Power ON time column #7
 			LIST_ITEMS+=("$(HoursToYDH $ON_TIME)")
-
+	fi
 	fi
 done
 
@@ -162,30 +180,29 @@ for ((i=0; i<${#LIST_ITEMS[@]}; i++)); do	# Print all columns left-aligned & spa
 	if [ $(($((i+1))%$COLS)) -eq 0 ]; then printf "%s\n"; fi			# new line every $COLS columns
 done
 
-# Display endurance attributes for all SSDs in column format.
-CHECKED=$(zenity --list --title="$(basename "$0")" --text="\
-<b>TB written:</b> Total lifetime data written, in Terabytes
-<b>GB/day:</b> Mean daily write rate, in Gigabytes
-<b>Drive health:</b> Estimated percent life remaining
-<b>P/E cycles:</b> Average # of program-erase cycles
-
-To display all Smart Data, select a device and press <b>OK</b>
-" --column="Device" --column="Model" --column="TB written" --column="GB/day" --column="Drive health" --column="P/E cycles" --column="Power On" \
---print-column=1 --width=900 --height=500 -- "${LIST_ITEMS[@]}")
-
-# Work around zenity bug, returns selection twice if user presses Enter on selection.
-CHECKED=$(cut -d "|" -f2 <<< "$CHECKED")
-
-if [ -z "$CHECKED" ]; then exit; fi	# if strlen 0 exit
-
-#echo $CHECKED	# User selection
-
-sudo smartctl -a $CHECKED | zenity --text-info \
-									   --title="$(basename "$0") -- $CHECKED" \
-									   --font="Courier 10 Pitch Bold" \
-									   --width=1000 --height=600
+## Display endurance attributes for all SSDs in column format.
+#CHECKED=$(zenity --list --title="$(basename "$0")" --text="\
+#<b>TB written:</b> Total lifetime data written, in Terabytes
+#<b>GB/day:</b> Mean daily write rate, in Gigabytes
+#<b>Drive health:</b> Estimated percent life remaining
+#<b>P/E cycles:</b> Average # of program-erase cycles
+#
+#To display all Smart Data, select a device and press <b>OK</b>
+#" --column="Device" --column="Model" --column="TB written" --column="GB/day" --column="Drive health" --column="P/E cycles" --column="Power On" \
+#--print-column=1 --width=900 --height=500 -- "${LIST_ITEMS[@]}")
+#
+## Work around zenity bug, returns selection twice if user presses Enter on selection.
+#CHECKED=$(cut -d "|" -f2 <<< "$CHECKED")
+#
+#if [ -z "$CHECKED" ]; then exit; fi	# if strlen 0 exit
+#
+##echo $CHECKED	# User selection
+#
+#sudo smartctl -a $CHECKED | zenity --text-info \
+#									   --title="$(basename "$0") -- $CHECKED" \
+#									   --font="Courier 10 Pitch Bold" \
+#									   --width=1000 --height=600
 
 if [[ $? -ne 0 ]]; then exit; fi
 
-exec "$0" "$@"	# Restart script with same parameters
-
+#exec "$0" "$@"	# Restart script with same parameters
