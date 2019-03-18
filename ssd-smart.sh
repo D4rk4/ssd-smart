@@ -80,15 +80,25 @@ for DISK in /sys/block/* ; do
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
 			;;
 
-			"MT-64") # KingSpec M2 SSD 64Gb
+			MT-*) # KingSpec M2 SSD MT-series
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Total_LBAs_Written"
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
 			;;
-			"P3-512") # KingSpec SATA SSD 512Gb
+			Q-*) # KingSpec SATA SSD Q-series
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Total_LBAs_Written"
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+			;;
+			P3-*) # KingSpec SATA SSD P3-series
+				ATTR_POHR="Power_On_Hours"
+				ATTR_LBAW="Total_LBAs_Written"
+				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+			;;
+			HFS*G32MND) # SK hynix SATA SSDs 
+				ATTR_POHR="Power_On_Hours"
+				ATTR_LBAW="Total_Writes_GiB"
+				ATTR_WEAR="Wear_Leveling_Count"
 			;;
 			TS*GSSD360S) # Transcend 360S SSDs
 				ATTR_POHR="Power_On_Hours"
@@ -134,6 +144,9 @@ for DISK in /sys/block/* ; do
 			else
 				ON_TIME=$(grep "$ATTR_POHR" <<< "$SMART_INFO" | awk '{print $10}')
 				LBAS_WRITTEN=$(grep "$ATTR_LBAW" <<< "$SMART_INFO" | awk '{print $10}')
+				if [ "$ATTR_LBAW" = "Total_Writes_GiB" ]; then
+					LBAS_WRITTEN="$(( $LBAS_WRITTEN * $BYTES_PER_GB / $LBA_SIZE ))"
+				fi
 			fi
 
 			BYTES_WRITTEN=$(bc <<< "$LBAS_WRITTEN * $LBA_SIZE")	# Convert LBAs to bytes
