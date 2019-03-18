@@ -95,6 +95,11 @@ for DISK in /sys/block/* ; do
 				ATTR_LBAW="Total_LBAs_Written"
 				ATTR_WEAR="Wear_Leveling_Count"
 			;;
+			TS*GSSD340) # Transcend 340 SSDs
+				ATTR_POHR="Power_On_Hours"
+				ATTR_LBAW="Total_LBAs_Written"
+				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+			;;
 
 
 			############ Add other SSD models here. ############
