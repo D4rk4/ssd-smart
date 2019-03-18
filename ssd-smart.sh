@@ -20,7 +20,6 @@ function HoursToYDH {
 }
 
 LANG=C
-LBA_SIZE=512	# Always?
 BYTES_PER_MB=1048576
 BYTES_PER_GB=1073741824
 BYTES_PER_TB=1099511627776
@@ -56,6 +55,7 @@ for DISK in /sys/block/* ; do
 					ATTR_POHR="Power_On_Hours"
 					ATTR_LBAW="Total_LBAs_Written"
 					ATTR_WEAR="Wear_Leveling_Count"
+					LBA_SIZE=512
 				fi
 			;;
 
@@ -64,6 +64,7 @@ for DISK in /sys/block/* ; do
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="249 Unknown_Attribute"
 				ATTR_WEAR="Media_Wearout_Indicator"
+				LBA_SIZE=512
 			;;
 
 			"OCZ-VERTEX4") # Model Family: Indilinx Barefoot_2/Everest/Martini based SSDs, Firmware Version: 1.5
@@ -71,6 +72,7 @@ for DISK in /sys/block/* ; do
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Lifetime_Writes"
 				ATTR_WEAR="Media_Wearout_Indicator"
+				LBA_SIZE=512
 			;;
 
 			"SC2 M2 SSD") # MyDigitalSSD 128GB Super Cache 2, Firmware Version: S9FM02.3
@@ -78,27 +80,32 @@ for DISK in /sys/block/* ; do
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="173 Unknown_Attribute"
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+				LBA_SIZE=512
 			;;
 
 			MT-*) # KingSpec M2 SSD MT-series
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Total_LBAs_Written"
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+				LBA_SIZE=512
 			;;
 			Q-*) # KingSpec SATA SSD Q-series
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Total_LBAs_Written"
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+				LBA_SIZE=512
 			;;
 			P3-*) # KingSpec SATA SSD P3-series
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Total_LBAs_Written"
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+				LBA_SIZE=512
 			;;
 			"HFS256G32MND-2200A") # SK hynix SATA SSDs  HFS256G32MND-2200A
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Total_Writes_GiB"
 				ATTR_WEAR="Wear_Leveling_Count"
+				LBA_SIZE=512
 			;;
 			TS*GSSD360S) # Transcend 360S SSDs
 				ATTR_POHR="Power_On_Hours"
@@ -110,6 +117,7 @@ for DISK in /sys/block/* ; do
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Total_LBAs_Written"
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
+				LBA_SIZE=512
 			;;
 
 
@@ -120,6 +128,7 @@ for DISK in /sys/block/* ; do
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="ATTRIBUTE_NAME"	# Default string if no usable attribute is available
 				ATTR_WEAR="ATTRIBUTE_NAME"	# Default string if no usable attribute is available
+				LBA_SIZE=512
 			;;
 
 
