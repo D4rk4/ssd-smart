@@ -104,6 +104,7 @@ for DISK in /sys/block/* ; do
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Total_LBAs_Written"
 				ATTR_WEAR="Wear_Leveling_Count"
+				LBA_SIZE="33554432"             #Total LBAs written (each write unit = 32MB)
 			;;
 			TS*GSSD340) # Transcend 340 SSDs
 				ATTR_POHR="Power_On_Hours"
