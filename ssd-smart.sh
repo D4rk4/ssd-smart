@@ -95,7 +95,7 @@ for DISK in /sys/block/* ; do
 				ATTR_LBAW="Total_LBAs_Written"
 				ATTR_WEAR="ATTRIBUTE_NAME"	# No Wear_Indicator
 			;;
-			HFS*G32MND*) # SK hynix SATA SSDs 
+			"HFS256G32MND-2200A") # SK hynix SATA SSDs  HFS256G32MND-2200A
 				ATTR_POHR="Power_On_Hours"
 				ATTR_LBAW="Total_Writes_GiB"
 				ATTR_WEAR="Wear_Leveling_Count"
