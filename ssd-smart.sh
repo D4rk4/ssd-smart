@@ -50,6 +50,7 @@ for DISK in /sys/block/* ; do
 					ATTR_POHR="Power On Hours:"
 					ATTR_LBAW="Data Units Written:"
 					ATTR_WEAR="Percentage Used:"
+					LBA_SIZE=512
 				else
 					# Get attributes 9, 177, 241
 					ATTR_POHR="Power_On_Hours"
@@ -138,6 +139,7 @@ for DISK in /sys/block/* ; do
                                         ATTR_POHR="Power On Hours:"
                                         ATTR_LBAW="Data Units Written:"
                                         ATTR_WEAR="Percentage Used:"
+					LBA_SIZE=512
 				else
 					for (( i=1; i<=5; i++)); do LIST_ITEMS+=("n/a"); done
 					continue
